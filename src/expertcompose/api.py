@@ -182,6 +182,18 @@ def _handler(
                 project_id, action = parts[2], parts[3]
                 body = self._body()
                 blueprint_id = _optional_text(body, "blueprint_id")
+                if action == "revisions":
+                    change = body.get("change")
+                    if not isinstance(change, dict):
+                        raise ValueError("change must be a JSON object")
+                    blueprint = service.revise(
+                        project_id,
+                        base_release_id=_required_text(body, "base_release_id"),
+                        change=cast(dict[str, Any], change),
+                        authorization=_required_text(body, "authorization"),
+                        created_by=actor,
+                    )
+                    return blueprint.model_dump(mode="json")
                 if action == "source-packs":
                     pack = body.get("pack")
                     if not isinstance(pack, dict):
@@ -194,6 +206,10 @@ def _handler(
                         created_by=actor,
                     )
                     return blueprint.model_dump(mode="json")
+                if action == "supersede":
+                    return service.supersede(
+                        project_id, _required_text(body, "blueprint_id")
+                    ).model_dump(mode="json")
                 if action == "build":
                     build = service.build(project_id, blueprint_id)
                     return {
@@ -229,6 +245,11 @@ def _handler(
                         for release in service.workspace.list_releases(project_id)
                     ]
                 }
+            if parts == ("v1", "catalog") and method == "GET":
+                scope_ref = _one(query, "scope_ref")
+                if not scope_ref:
+                    raise ValueError("query parameter 'scope_ref' is required")
+                return service.scope_catalog(scope_ref)
             if (
                 len(parts) == 4
                 and parts[:2] == ("v1", "releases")

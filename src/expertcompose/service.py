@@ -25,6 +25,7 @@ from .models import (
     stable_id,
     utc_now,
 )
+from .revisions import BlueprintReviser
 from .runtime import canonical_release_selectors, release_surface_selection
 from .source_pack import SourcePackImporter
 from .synthesis import Composer, SynthesisProvider
@@ -40,6 +41,7 @@ class ExpertComposeService:
         self.evaluator = ExpertNetEvaluator(self.workspace)
         self.governance = Governance(self.workspace)
         self.source_packs = SourcePackImporter(self.workspace, self.ingestor)
+        self.reviser = BlueprintReviser(self.workspace, self.ingestor)
 
     def initialize(self) -> Path:
         self.workspace.initialize()
@@ -134,6 +136,28 @@ class ExpertComposeService:
             created_by=created_by,
         )
 
+    def revise(
+        self,
+        project_id: str,
+        *,
+        base_release_id: str,
+        change: dict[str, Any],
+        authorization: str,
+        created_by: str,
+    ) -> ExpertBlueprint:
+        """Create the next ordinary Blueprint from a reviewed bounded change."""
+
+        return self.reviser.submit(
+            project_id,
+            base_release_id=base_release_id,
+            change=change,
+            authorization=authorization,
+            created_by=created_by,
+        )
+
+    def supersede(self, project_id: str, blueprint_id: str) -> ExpertBlueprint:
+        return self.reviser.supersede(project_id, blueprint_id)
+
     def build(self, project_id: str, blueprint_id: str = "") -> BuildResult:
         return self.generator.build(self.workspace.blueprint(project_id, blueprint_id))
 
@@ -202,7 +226,21 @@ class ExpertComposeService:
         published_by: str,
     ) -> ReleaseManifest:
         blueprint = self.workspace.blueprint(project_id, blueprint_id)
-        build = build_from_workspace(self.workspace, blueprint)
+        existing = next(
+            (
+                release
+                for release in self.workspace.list_releases(project_id)
+                if release.blueprint_id == blueprint.blueprint_id
+                and release.status is ReleaseStatus.PUBLISHED
+            ),
+            None,
+        )
+        if existing is not None:
+            return existing
+        # Approval changes workflow state but not the semantic Blueprint digest.
+        # Re-render here so the immutable release carries the approved record,
+        # rather than the earlier draft bytes used during evaluation.
+        build = self.generator.build(blueprint)
         return self.governance.publish(blueprint, build, published_by=published_by)
 
     def release_catalog(
@@ -246,6 +284,21 @@ class ExpertComposeService:
             "catalog_sha256": _blueprint_value_sha256(value),
             "blueprint": value,
         }
+
+    def scope_catalog(self, scope_ref: str) -> dict[str, Any]:
+        """Resolve one Scope only when it has exactly one enabled binding."""
+
+        bindings = self.workspace.list_scope_bindings(scope_ref=scope_ref, enabled=True)
+        if not bindings:
+            raise PermissionError("no enabled ScopeBinding authorizes this Scope")
+        if len(bindings) != 1:
+            raise ValueError(
+                "Scope has multiple enabled bindings; reconcile it before serving a catalog"
+            )
+        return self.release_catalog(
+            bindings[0].release_id,
+            scope_refs=(scope_ref,),
+        )
 
     def create_scope_binding(
         self,

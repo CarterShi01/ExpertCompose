@@ -200,6 +200,42 @@ def test_api_runs_remote_source_pack_release_lifecycle(
             assert catalog.status_code == 200, catalog.text
             team = catalog.json()["blueprint"]["roots"][0]
             assert team["children"][0]["children"][0]["name"] == "reviewer"
+            resolved = client.get(
+                "/v1/catalog", params={"scope_ref": "project://remote"}
+            )
+            assert resolved.status_code == 200, resolved.text
+            assert resolved.json()["release"]["release_id"] == release["release_id"]
+
+            revision = client.post(
+                "/v1/projects/literature-review/revisions",
+                json={
+                    "base_release_id": release["release_id"],
+                    "authorization": "reviewed remote change",
+                    "change": {
+                        "kind": "skill",
+                        "name": "provenance-review",
+                        "target_scope": "resource",
+                        "title": "Improve provenance review",
+                        "reason": "Target-host review passed.",
+                        "effect": "Tighten the existing Skill.",
+                        "source": "team-construction:remote",
+                        "idempotency_key": "remote-change-1",
+                        "body": "skill_md: Verify exact source locators.",
+                        "body_value": {
+                            "skill_md": "Verify exact source locators before accepting claims."
+                        },
+                    },
+                },
+            )
+            assert revision.status_code == 200, revision.text
+            revised = revision.json()
+            assert revised["status"] == "draft"
+            dismissed = client.post(
+                "/v1/projects/literature-review/supersede",
+                json={"blueprint_id": revised["blueprint_id"]},
+            )
+            assert dismissed.status_code == 200, dismissed.text
+            assert dismissed.json()["status"] == "superseded"
     finally:
         server.shutdown()
         server.server_close()
