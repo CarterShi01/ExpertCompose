@@ -1,8 +1,9 @@
 # Three-product decoupling implementation plan
 
 Status: active implementation ledger  
-Last updated: 2026-10-28  
+Last updated: 2026-10-29
 Design: [three-product-decoupling-design.md](three-product-decoupling-design.md)
+Evidence: [verification-2026-10-29.md](verification-2026-10-29.md)
 
 ## Completion definition
 
@@ -140,7 +141,7 @@ ExpertCompose governance path; OC has no second authoritative writer.
 ### one-creator
 
 - [x] focused Team, Authorization, Project, Work, and Runtime unit tests
-- [ ] static/type/lint gates used by the repository
+- [x] static/type/lint and repository-architecture gates used by the repository
 - [x] OC application functional test against an external ExpertCompose process
 - [x] unauthorized-client and service-unavailable functional tests
 - [x] deployment manifest and generated-artifact consistency checks
