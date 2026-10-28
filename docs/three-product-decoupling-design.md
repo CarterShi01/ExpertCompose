@@ -216,6 +216,10 @@ or measured scaling policy.
 
 - Profile content and hierarchy become Role content in a Blueprint.
 - Skill bodies and reviewed Tool requirements/bindings become Blueprint data.
+- Skill `uses` refs remain in Blueprint/Release data. Refs inside the ExpertNet
+  compile into the standalone artifact; opaque refs such as `project/...` are
+  declared as Host composition dependencies and must be supplied by the
+  embedding product rather than copied into ExpertCompose.
 - roster queries read Role metadata from a released ExpertNet projection.
 - Team Draft content becomes a new Blueprint draft/version.
 - capability acquisition imports authorized evidence into a Workspace.

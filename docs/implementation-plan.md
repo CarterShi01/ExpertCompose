@@ -1,7 +1,7 @@
 # MVP implementation plan and delivery ledger
 
 Status: v0.1 implemented; production expansion remains planned
-Last updated: 2026-10-28
+Last updated: 2026-10-29
 
 The cross-repository extraction and production service work is tracked in the
 executable [three-product decoupling ledger](three-product-decoupling-plan.md).
@@ -77,6 +77,15 @@ context without claiming that structural validation equals expert quality.
 - End-to-end offline example and CI on supported Python versions.
 - Pyright strict mode, Ruff, wheel/sdist build, and CLI smoke gate.
 
+### WP9 — Host Team source-pack bridge
+
+- Backward-compatible `expertcompose.source-pack.v1` import and canonical v2
+  import with validated Skill `uses` references.
+- Full composition dependencies retained in the Blueprint and release.
+- Standalone generation resolves internal references and records unresolved
+  Host-owned references as reviewable `host_uses` metadata.
+- one-creator Team export/import coverage for behavior-bearing Project Types.
+
 ## Verification matrix
 
 | Requirement | Evidence |
@@ -92,6 +101,7 @@ context without claiming that structural validation equals expert quality.
 | Publish cannot overwrite a release | end-to-end test |
 | MCP import stays within allowlist | MCP Tool tests |
 | Distribution is installable | package build gate |
+| Host composition dependencies survive import | source-pack and generator tests |
 
 ## Post-MVP phases
 

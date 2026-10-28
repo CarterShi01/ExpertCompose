@@ -61,6 +61,11 @@ expertcompose --workspace /var/lib/expertcompose import-pack one-creator-team \
   /secure/oc-team.json --authorization 'reviewed OC repository declarations'
 ```
 
+Source-pack v2 also preserves Skill `uses` refs. ExpertCompose compiles refs
+owned by the ExpertNet and records external refs such as `project/...` as Host
+composition dependencies; one-creator remains responsible for those Project
+Tools and their final authorization.
+
 Build, evaluate, approve, and publish that Blueprint through the normal gates.
 Then create the mapping:
 

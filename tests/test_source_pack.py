@@ -17,7 +17,7 @@ def _pack() -> dict[str, object]:
     )
     research_instructions = "Compare source claims and preserve contradictory evidence."
     value: dict[str, object] = {
-        "format": "expertcompose.source-pack.v1",
+        "format": "expertcompose.source-pack.v2",
         "name": "sample-team",
         "title": "Sample Team",
         "objective": "Provide a small reviewed team without executing imported source text.",
@@ -49,6 +49,7 @@ def _pack() -> dict[str, object]:
                 "name": "architecture-review",
                 "description": "Perform an evidence-backed architecture review.",
                 "instructions": skill_instructions,
+                "uses": ["project/get-project", "project/resource/read"],
             }
         ],
         "messages": [
@@ -81,11 +82,19 @@ def test_source_pack_import_is_deterministic_grounded_and_redacted(
     assert role.name == "architect"
     assert role.annotations["oc.hand"] == "claude-code"
     assert role.skills[0].name == "architecture-review"
+    assert role.skills[0].uses == (
+        "project/get-project", "project/resource/read",
+    )
     assert "abcdefghijklmnop" not in role.instructions
     assert "[REDACTED]" in role.instructions
     assert role.evidence_refs
     build = service.build("literature-review", blueprint.blueprint_id)
     assert build.unbound_required_tools == ()
+    manifest = json.loads((build.path / "build-manifest.json").read_text())
+    assert manifest["host_uses"] == ["project/get-project", "project/resource/read"]
+    generated = (build.path / "src" / build.package / "app.py").read_text()
+    assert "project/get-project" not in generated
+    assert "project/get-project" in (build.path / "README.md").read_text()
     assert service.evaluate("literature-review", blueprint.blueprint_id).status == "passed"
     service.approve(
         "literature-review", blueprint.blueprint_id, approved_by="domain-reviewer"
@@ -120,3 +129,24 @@ def test_source_pack_digest_and_instruction_projection_are_verified() -> None:
     value["content_sha256"] = source_pack_digest(value)
     with pytest.raises(ValidationError, match="exactly mirror"):
         TeamSourcePack.model_validate(value)
+
+    value = _pack()
+    value["format"] = "expertcompose.source-pack.v1"
+    value["content_sha256"] = source_pack_digest(value)
+    with pytest.raises(ValidationError, match="v1 cannot declare Skill uses"):
+        TeamSourcePack.model_validate(value)
+
+    value = _pack()
+    skills = list(value["skills"])  # type: ignore[arg-type]
+    skills[0] = {**skills[0], "uses": ["not a ref"]}
+    value["skills"] = skills
+    value["content_sha256"] = source_pack_digest(value)
+    with pytest.raises(ValidationError, match="invalid uses ref"):
+        TeamSourcePack.model_validate(value)
+
+    value = _pack()
+    value["format"] = "expertcompose.source-pack.v1"
+    for skill in value["skills"]:  # type: ignore[union-attr]
+        skill["uses"] = []
+    value["content_sha256"] = source_pack_digest(value)
+    assert TeamSourcePack.model_validate(value).format == "expertcompose.source-pack.v1"

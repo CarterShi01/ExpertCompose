@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Literal, Self
@@ -43,6 +44,20 @@ class PackSkill(Record):
     name: str = Field(pattern=r"^[a-z][a-z0-9-]{0,63}$")
     description: str = Field(min_length=1, max_length=1000)
     instructions: str = Field(min_length=1, max_length=30_000)
+    uses: tuple[str, ...] = Field(default=(), max_length=200)
+
+    @model_validator(mode="after")
+    def valid_uses(self) -> Self:
+        if len(self.uses) != len(set(self.uses)):
+            raise ValueError(f"source-pack Skill {self.name!r} has duplicate uses refs")
+        for ref in self.uses:
+            if not re.fullmatch(
+                r"[a-z0-9][a-z0-9._-]*(?:/[a-z0-9][a-z0-9._-]*)+", ref
+            ):
+                raise ValueError(
+                    f"source-pack Skill {self.name!r} has invalid uses ref {ref!r}"
+                )
+        return self
 
 
 class PackRole(Record):
@@ -63,7 +78,7 @@ class PackRole(Record):
 
 
 class TeamSourcePack(Record):
-    format: Literal["expertcompose.source-pack.v1"]
+    format: Literal["expertcompose.source-pack.v1", "expertcompose.source-pack.v2"]
     name: str = Field(pattern=r"^[a-z][a-z0-9-]{0,63}$")
     title: str = Field(min_length=1, max_length=300)
     objective: str = Field(min_length=1, max_length=4000)
@@ -81,6 +96,10 @@ class TeamSourcePack(Record):
         if len(skill_names) != len(set(skill_names)):
             raise ValueError("source-pack Skill names must be unique")
         known_skills = set(skill_names)
+        if self.format == "expertcompose.source-pack.v1" and any(
+            skill.uses for skill in self.skills
+        ):
+            raise ValueError("source-pack v1 cannot declare Skill uses; use v2")
         for role in self.roles:
             unknown = set(role.skills) - known_skills
             if unknown:
@@ -112,9 +131,21 @@ class TeamSourcePack(Record):
 def source_pack_digest(pack: TeamSourcePack | dict[str, object]) -> str:
     if isinstance(pack, TeamSourcePack):
         value = pack.model_dump(mode="json", exclude={"content_sha256"})
+        if pack.format == "expertcompose.source-pack.v1":
+            for skill in value["skills"]:
+                skill.pop("uses", None)
     else:
         value = dict(pack)
         value.pop("content_sha256", None)
+        if value.get("format") == "expertcompose.source-pack.v1":
+            skills = value.get("skills")
+            if isinstance(skills, list):
+                value["skills"] = [
+                    {key: item for key, item in skill.items() if key != "uses"}
+                    if isinstance(skill, dict) and not skill.get("uses")
+                    else skill
+                    for skill in skills
+                ]
     raw = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
     return hashlib.sha256(raw.encode()).hexdigest()
 
@@ -268,6 +299,7 @@ class SourcePackImporter:
                     instructions=_unit_content(
                         units[len(pack.roles) + list(skill_map).index(name)].text
                     ),
+                    uses=skill_map[name].uses,
                     evidence_refs=(evidence_by_skill[name],),
                 )
                 for name in item.skills

@@ -1,7 +1,7 @@
 # ExpertCompose architecture and product design
 
 Status: MVP v0.1 authoritative design; production decoupling direction active
-Last updated: 2026-10-28
+Last updated: 2026-10-29
 
 The authoritative boundary for Contexture, ExpertCompose, and one-creator is
 [three-product-direction.md](three-product-direction.md). Its implementation
@@ -242,6 +242,26 @@ The authenticated `/v1` HTTP boundary gives deployed consumers verified,
 Scope-selected release catalogs without exposing Workspace paths. It is small
 by design; the full authoring lifecycle stays on CLI/MCP until durable remote
 jobs exist.
+
+### Host source-pack import
+
+A Host product may export an inert Team declaration as an
+`expertcompose.source-pack.v2` document. Import converts Role and Skill source
+records into the same target-independent Blueprint used by the ordinary
+compiler lifecycle. Skill `uses` references are retained in the Blueprint so
+reviewers can see the complete composition contract.
+
+Generation resolves only references owned by that Blueprint into the
+standalone Contexture project. References owned by the Host, such as
+`project/get-project`, remain explicit `host_uses` dependencies in the build
+manifest and generated README; they are not silently discarded or emitted as
+broken standalone imports. The consuming Host is responsible for resolving
+them when it composes the published release with its own capability graph.
+
+The v1 source-pack format remains import-compatible for declarations without
+`uses`. It rejects non-empty `uses` so an older format cannot accidentally
+erase a behavior dependency. The v2 document is the canonical format for
+cross-product Team migration.
 
 The MCP surface is a local **control plane**, not the final consumer
 connector. The product direction separates a read-mostly Runtime endpoint from
