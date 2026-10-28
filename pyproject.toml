@@ -1,0 +1,70 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "expertcompose"
+version = "0.1.0"
+description = "Compile books, papers, conversations, and operational evidence into tested expert systems for agents"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { file = "LICENSE" }
+authors = [{ name = "ExpertCompose contributors" }]
+keywords = ["agents", "expert-systems", "mcp", "skills", "knowledge", "contexture"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+  "contexture-mcp>=1.0.0,<2",
+  "httpx>=0.27,<1",
+  "pydantic>=2.10,<3",
+  "pypdf>=5,<7",
+]
+
+[project.optional-dependencies]
+dev = [
+  "build>=1.2",
+  "pyright>=1.1.400",
+  "pytest>=8.3",
+  "pytest-asyncio>=0.25",
+  "ruff>=0.11",
+]
+
+[project.scripts]
+expertcompose = "expertcompose.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/CarterShi01/ExpertCompose"
+Repository = "https://github.com/CarterShi01/ExpertCompose"
+Issues = "https://github.com/CarterShi01/ExpertCompose/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/expertcompose"]
+
+[tool.pytest.ini_options]
+addopts = "-ra"
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
+
+[tool.pyright]
+pythonVersion = "3.11"
+typeCheckingMode = "strict"
+include = ["src", "tests"]
+reportUnknownMemberType = "warning"
+reportUnknownArgumentType = "warning"
+reportUnknownVariableType = "warning"
+reportMissingTypeStubs = "none"

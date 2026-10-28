@@ -1,0 +1,16 @@
+{
+  "messages": [
+    {
+      "role": "user",
+      "content": "Review these papers without losing contradictory findings."
+    },
+    {
+      "role": "assistant",
+      "content": "I will build a claim-to-source table, compare study scope, and mark unresolved conflicts."
+    },
+    {
+      "role": "user",
+      "content": "The last review failed because it generalized a laboratory result to production use."
+    }
+  ]
+}
