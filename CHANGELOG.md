@@ -8,3 +8,5 @@
 - Standalone Contexture application generation and MCP control plane.
 - Deterministic evaluation, neutral behavioral receipts, approval, and
   immutable local publication.
+- Scenario-first Runtime product research, a unified cross-host interaction
+  flow, and a research-grounded MetaSkill Kernel for expert-team organization.

@@ -54,6 +54,13 @@ ExpertCompose owns the compiler and product lifecycle:
 5. **Assurance plane** — static gates, Host receipts, approval, and releases.
 6. **Interface plane** — service facade, CLI, and MCP operations.
 
+The post-MVP product adds a seventh, explicitly separate plane:
+
+7. **Meta-organization plane** — versioned policies for team responsibility
+   design, routing, decomposition, topology, coordination, verification,
+   attribution, and governed evolution. It manages ExpertNets; it does not
+   contain domain knowledge or replace the compiler pipeline.
+
 Contexture owns the target runtime's immutable graph, canonical addressing,
 progressive disclosure, typed Tool binding, Host-neutral invocation, and MCP
 serving. It is intentionally not used as a database, model client, scheduler,
@@ -225,6 +232,14 @@ source-safety Skill and typed Tools. Model-assisted provider credentials are
 intentionally absent from MCP v0.1; a deployment-specific provider policy can
 be added without putting secrets in Tool arguments.
 
+The v0.1 MCP surface is a local **control plane**, not the final consumer
+connector. The product direction separates a read-mostly Runtime endpoint from
+the Studio/control endpoint, adds host adapter Skills, and keeps large expert
+libraries behind Contexture progressive disclosure. The complete scenario
+research, unified interaction flow, and precise MetaSkill Kernel definition
+are specified in
+[product-research-and-metaskill-kernel.md](product-research-and-metaskill-kernel.md).
+
 ## 10. Failure, recovery, and concurrency
 
 Filesystem writes use a temporary file, `fsync`, and atomic replace. SQLite
@@ -256,5 +271,8 @@ Planned compatible extensions include OCR and richer parsers, incremental
 source updates, embeddings as a retrieval optimization, conflict-resolution
 workflows, reviewed external Tool registries, signed Host receipts, task
 baseline comparison, ExpertNet diff/merge, non-Python targets, registry
-publication, and continuous effectiveness monitoring. These extend the planes
-above rather than weakening their boundaries.
+publication, and continuous effectiveness monitoring. Runtime routing and
+team evolution use the system-owned MetaSkill Kernel; source segmentation,
+claim extraction, and artifact generation remain compiler capabilities rather
+than being mislabeled as meta-skills. These extensions preserve the planes and
+trust boundaries above.

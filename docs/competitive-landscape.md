@@ -80,6 +80,28 @@ not an assertion that absent features can never be implemented.
 6. Add an editorial/evaluation UI only after the artifact contract is stable;
    otherwise the UI becomes the product database and weakens portability.
 
+## Multi-agent organization and meta-skill research
+
+The product's MetaSkill Kernel is not a set of ingestion prompts. It is the
+control layer that manages expert-team responsibilities, routing, topology,
+coordination, verification, attribution, and reorganization. The detailed
+method mapping and adoption cautions are maintained in
+[product-research-and-metaskill-kernel.md](product-research-and-metaskill-kernel.md).
+
+Primary references reviewed on 2026-10-28 include
+[AutoAgents](https://github.com/OWD-AI/AutoAgents),
+[MetaGPT](https://github.com/FoundationAgents/MetaGPT),
+[DyLAN](https://arxiv.org/abs/2310.02170),
+[ADAS](https://arxiv.org/abs/2408.08435),
+[GPTSwarm](https://arxiv.org/abs/2402.16823),
+[AFlow](https://arxiv.org/abs/2410.10762),
+[AgentPrune](https://arxiv.org/abs/2410.02506),
+[AgentDropout](https://aclanthology.org/2025.acl-long.1170/),
+[Meta-Agent](https://arxiv.org/abs/2605.25233), and
+[AMOD](https://arxiv.org/abs/2610.27531). They provide research methods rather
+than production guarantees; several results are benchmark-specific and the
+2026 papers are especially recent.
+
 ## Naming conclusion
 
 `ExpertCompose` describes the product action: composing operational expert

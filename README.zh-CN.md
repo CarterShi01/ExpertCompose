@@ -32,4 +32,8 @@ uv run expertcompose --workspace .demo publish research-review --published-by re
 
 详细设计见 [docs/design.md](docs/design.md)，实施计划见
 [docs/implementation-plan.md](docs/implementation-plan.md)，竞品与开源项目资料见
-[docs/competitive-landscape.md](docs/competitive-landscape.md)。英文文档和代码是权威版本，本文件为中文入口说明。
+[docs/competitive-landscape.md](docs/competitive-landscape.md)。关于“像 USB 一样连接 Agent”的
+用户场景、统一交互流程，以及真正负责组队、路由、协作、归因和演化的 MetaSkill Kernel，
+见[中文产品调研](docs/product-research-and-metaskill-kernel.zh-CN.md)和
+[英文权威设计](docs/product-research-and-metaskill-kernel.md)。英文文档和代码是权威版本，
+本文件为中文入口说明。

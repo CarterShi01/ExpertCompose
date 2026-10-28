@@ -90,6 +90,13 @@ context without claiming that structural validation equals expert quality.
 
 ## Post-MVP phases
 
+The product sequence and MetaSkill Kernel are defined in detail in
+[product-research-and-metaskill-kernel.md](product-research-and-metaskill-kernel.md).
+In particular, “meta-skill” means organization-level control of the expert
+team—responsibilities, roster, routing, topology, coordination, verification,
+attribution, and evolution—not the prompts used by ingestion or synthesis
+pipeline stages.
+
 ### Phase 2 — Production ingestion and editorial workflow
 
 Add EPUB/HTML/DOCX/OCR adapters, URL acquisition with robots/rights metadata,
@@ -128,6 +135,27 @@ continuous evaluation, and feedback-to-draft proposals.
 
 Exit gate: components remain provenance-complete and version-resolvable across
 language targets and organizations.
+
+### Phase 6 — Runtime connector and MetaSkill Kernel
+
+Split the current local control MCP into a least-privilege Runtime plane and a
+Studio/control plane. Add remote OAuth, tenant-aware authorization, host
+adapter Skills, Expert Registry releases, explicit versioned run handles,
+outcome/trace records, and compact expert/version/evidence disclosure.
+
+Implement the MetaSkill Kernel in three bounded loops:
+
+- build-time responsibility architecture, topology design, and roster
+  ablation;
+- run-time expert routing, task decomposition, coordination, communication,
+  verification, and stopping;
+- learning-time fault/contribution attribution, candidate evolution,
+  held-out evaluation, approval, canary, and rollback.
+
+Exit gate: a user connects one Runtime endpoint, asks a normal task in two
+different hosts, receives the same pinned ExpertNet behavior with traceable
+evidence, and cannot access Studio authority. No organization change can reach
+the release channel without independent held-out evidence and approval.
 
 ## Risks and mitigations
 

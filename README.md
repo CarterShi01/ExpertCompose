@@ -87,6 +87,8 @@ deployment must add authentication and Contexture's network-origin controls.
 - `src/expertcompose/governance.py` — approval and immutable publication
 - `src/expertcompose/mcp.py` — Contexture-native MCP operations
 - `docs/competitive-landscape.md` — sourced open-source and market comparison
+- `docs/product-research-and-metaskill-kernel.md` — scenario-first MCP product
+  design and the expert-team management MetaSkill Kernel
 - `docs/one-creator-team-reference.md` — local Team-module design mapping
 - `docs/implementation-plan.md` — delivered MVP and forward plan
 
