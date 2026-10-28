@@ -74,7 +74,7 @@ def test_source_pack_import_is_deterministic_grounded_and_redacted(
         authorization="Repository-owned reviewed pack",
         created_by="pytest",
     )
-    assert blueprint.provider == "source-pack-v1"
+    assert blueprint.provider == "source-pack-v2"
     assert blueprint.roots[0].name == "team"
     group = blueprint.roots[0].children[0]
     assert group.name == "engineering"

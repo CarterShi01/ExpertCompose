@@ -372,7 +372,7 @@ class SourcePackImporter:
             ),
             created_at=utc_now(),
             created_by=created_by,
-            provider="source-pack-v1",
+            provider=pack.format.removeprefix("expertcompose.").replace(".", "-"),
         )
         self.workspace.save_evidence(project_id, evidence)
         self.workspace.save_blueprint(blueprint)
