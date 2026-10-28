@@ -212,6 +212,68 @@ class PublishExpertNet(Tool):
         return manifest.model_dump(mode="json")
 
 
+class ListScopeBindings(Tool):
+    def __init__(self) -> None:
+        super().__init__(
+            name="list-scope-bindings",
+            description="List enabled bindings from business Scopes to exact ExpertNet releases.",
+            read_only=True,
+        )
+
+    async def invoke(self, scope_ref: str = "", include_disabled: bool = False) -> dict[str, Any]:
+        rows = _service(self).list_scope_bindings(
+            scope_ref=scope_ref,
+            include_disabled=include_disabled,
+        )
+        return {"bindings": [row.model_dump(mode="json") for row in rows]}
+
+
+class CreateScopeBinding(Tool):
+    def __init__(self) -> None:
+        super().__init__(
+            name="create-scope-binding",
+            description="Bind an opaque business Scope to an exact published ExpertNet surface.",
+            read_only=False,
+        )
+
+    async def invoke(
+        self,
+        scope_ref: str,
+        release_id: str,
+        created_by: str,
+        role_selectors: list[str] | None = None,
+    ) -> dict[str, Any]:
+        binding = _service(self).create_scope_binding(
+            scope_ref=scope_ref,
+            release_id=release_id,
+            role_selectors=tuple(role_selectors or ()),
+            created_by=created_by,
+        )
+        return binding.model_dump(mode="json")
+
+
+class SetScopeBindingEnabled(Tool):
+    def __init__(self) -> None:
+        super().__init__(
+            name="set-scope-binding-enabled",
+            description="Enable or disable a ScopeBinding with optimistic concurrency.",
+            read_only=False,
+        )
+
+    async def invoke(
+        self,
+        binding_id: str,
+        enabled: bool,
+        expected_revision: int,
+    ) -> dict[str, Any]:
+        binding = _service(self).set_scope_binding_enabled(
+            binding_id,
+            enabled=enabled,
+            expected_revision=expected_revision,
+        )
+        return binding.model_dump(mode="json")
+
+
 class SourceSafety(Skill):
     def __init__(self) -> None:
         super().__init__(
@@ -246,6 +308,9 @@ class ExpertComposeOperations(Role):
                 EvaluateExpertNet(),
                 ApproveExpertNet(),
                 PublishExpertNet(),
+                ListScopeBindings(),
+                CreateScopeBinding(),
+                SetScopeBindingEnabled(),
             ],
         )
 

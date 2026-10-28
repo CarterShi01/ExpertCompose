@@ -70,6 +70,14 @@ def _dispatch(service: ExpertComposeService, args: argparse.Namespace) -> Any:
                 base_url=args.base_url,
             )
         return service.compose(args.project_id, provider=provider, created_by=args.created_by)
+    if args.command == "import-pack":
+        return service.import_source_pack(
+            args.project_id,
+            args.path,
+            authorization=args.authorization,
+            license=args.license,
+            created_by=args.created_by,
+        )
     if args.command == "build":
         return service.build(args.project_id, args.blueprint_id)
     if args.command == "suite":
@@ -97,10 +105,52 @@ def _dispatch(service: ExpertComposeService, args: argparse.Namespace) -> Any:
             args.blueprint_id,
             published_by=args.published_by,
         )
+    if args.command == "binding":
+        if args.binding_command == "create":
+            return service.create_scope_binding(
+                scope_ref=args.scope_ref,
+                release_id=args.release_id,
+                role_selectors=tuple(args.select),
+                created_by=args.created_by,
+            )
+        if args.binding_command == "list":
+            return {
+                "bindings": service.list_scope_bindings(
+                    scope_ref=args.scope_ref,
+                    include_disabled=args.include_disabled,
+                )
+            }
+        if args.binding_command in {"enable", "disable"}:
+            return service.set_scope_binding_enabled(
+                args.binding_id,
+                enabled=args.binding_command == "enable",
+                expected_revision=args.expected_revision,
+            )
     if args.command == "serve":
         from .mcp import serve
 
         return serve(service.workspace.root, transport=args.transport, port=args.port)
+    if args.command == "runtime":
+        from .runtime import serve_release
+
+        return serve_release(
+            service.workspace,
+            args.release_id,
+            scope_refs=tuple(args.scope_ref),
+            transport=args.transport,
+            port=args.port,
+        )
+    if args.command == "api":
+        from .api import serve_api
+
+        token = os.environ.get(args.token_env, "")
+        return serve_api(
+            service.workspace.root,
+            host=args.host,
+            port=args.port,
+            token=token,
+            max_body_bytes=args.max_body_bytes,
+        )
     raise ValueError("unknown command")
 
 
@@ -142,6 +192,15 @@ def _parser() -> argparse.ArgumentParser:
     compose.add_argument("--api-key-env", default="EXPERTCOMPOSE_API_KEY")
     compose.add_argument("--created-by", default=os.environ.get("USER", "local-user"))
 
+    source_pack = commands.add_parser(
+        "import-pack", help="Import a reviewed expert-team source pack as a Blueprint draft."
+    )
+    source_pack.add_argument("project_id")
+    source_pack.add_argument("path", type=Path)
+    source_pack.add_argument("--authorization", required=True)
+    source_pack.add_argument("--license", default="unknown")
+    source_pack.add_argument("--created-by", default=os.environ.get("USER", "local-user"))
+
     build = commands.add_parser("build", help="Generate a standalone Contexture project.")
     _blueprint_arguments(build)
     suite = commands.add_parser("suite", help="Export held-out tasks and receipt template.")
@@ -158,9 +217,36 @@ def _parser() -> argparse.ArgumentParser:
     _blueprint_arguments(publish)
     publish.add_argument("--published-by", required=True)
 
+    binding = commands.add_parser("binding", help="Bind exact ExpertNet releases to Scopes.")
+    binding_commands = binding.add_subparsers(dest="binding_command", required=True)
+    binding_create = binding_commands.add_parser("create")
+    binding_create.add_argument("scope_ref")
+    binding_create.add_argument("release_id")
+    binding_create.add_argument("--select", action="append", default=[])
+    binding_create.add_argument(
+        "--created-by", default=os.environ.get("USER", "local-user")
+    )
+    binding_list = binding_commands.add_parser("list")
+    binding_list.add_argument("--scope-ref", default="")
+    binding_list.add_argument("--include-disabled", action="store_true")
+    for action in ("enable", "disable"):
+        state = binding_commands.add_parser(action)
+        state.add_argument("binding_id")
+        state.add_argument("--expected-revision", type=int, required=True)
+
     serve = commands.add_parser("serve", help="Serve ExpertCompose operations over MCP.")
     serve.add_argument("--transport", choices=("stdio", "streamable-http"), default="stdio")
     serve.add_argument("--port", type=int, default=8080)
+    runtime = commands.add_parser("runtime", help="Serve one published ExpertNet over MCP.")
+    runtime.add_argument("release_id")
+    runtime.add_argument("--scope-ref", action="append", default=[])
+    runtime.add_argument("--transport", choices=("stdio", "streamable-http"), default="stdio")
+    runtime.add_argument("--port", type=int, default=8080)
+    api = commands.add_parser("api", help="Serve the versioned deployment HTTP API.")
+    api.add_argument("--host", default="127.0.0.1")
+    api.add_argument("--port", type=int, default=8090)
+    api.add_argument("--token-env", default="EXPERTCOMPOSE_API_TOKEN")
+    api.add_argument("--max-body-bytes", type=int, default=1_048_576)
     return parser
 
 

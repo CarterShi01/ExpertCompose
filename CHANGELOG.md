@@ -10,3 +10,8 @@
   immutable local publication.
 - Scenario-first Runtime product research, a unified cross-host interaction
   flow, and a research-grounded MetaSkill Kernel for expert-team organization.
+- ScopeBinding persistence, selector validation, selected ExpertNet Runtime,
+  CLI and MCP operations.
+- Deterministic reviewed-team source-pack import and one-creator compatibility.
+- Authenticated versioned HTTP catalog API, container/Compose deployment, and
+  documented OC cutover and rollback.

@@ -26,6 +26,10 @@ and project generation.
 - Require a passing evaluation and named approval before immutable local
   publication.
 - Operate the lifecycle from the CLI or through a native Contexture MCP server.
+- Import a reviewed team source pack, bind an exact release to an opaque
+  business Scope, and serve a Contexture-selected Runtime surface.
+- Run a bearer-authenticated deployment API that returns only verified,
+  Scope-selected release catalogs to products such as one-creator.
 
 ExpertCompose does not execute instructions found in imported content, silently
 turn model output into code, or claim that structural checks prove domain
@@ -74,8 +78,9 @@ uv run expertcompose serve
 ```
 
 Use `--transport streamable-http --port 8080` for a loopback HTTP endpoint.
-The MVP CLI deliberately does not expose a non-loopback bind; production
-deployment must add authentication and Contexture's network-origin controls.
+Keep that authoring MCP behind a trusted host. The separate deployment API
+refuses a non-loopback bind without a bearer credential. See
+[deployment and OC cutover](docs/deployment.md).
 
 ## Repository map
 
@@ -86,6 +91,11 @@ deployment must add authentication and Contexture's network-origin controls.
 - `src/expertcompose/evaluation.py` — deterministic and behavioral gates
 - `src/expertcompose/governance.py` — approval and immutable publication
 - `src/expertcompose/mcp.py` — Contexture-native MCP operations
+- `src/expertcompose/runtime.py` — pinned ExpertNet Runtime and surface ceiling
+- `src/expertcompose/api.py` — versioned service-consumer HTTP boundary
+- `src/expertcompose/source_pack.py` — deterministic reviewed-team import
+- `docs/three-product-direction.md` — one-page product ownership decision
+- `docs/deployment.md` — container startup, OC cutover, and rollback
 - `docs/competitive-landscape.md` — sourced open-source and market comparison
 - `docs/product-research-and-metaskill-kernel.md` — scenario-first MCP product
   design and the expert-team management MetaSkill Kernel

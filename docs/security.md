@@ -31,6 +31,9 @@ approval -> publishable only for the same digest
 - External Tool requirements do not execute without reviewed bindings.
 - Publication is protected against stale evaluation and release overwrite.
 - Streamable HTTP defaults to Contexture's loopback-safe configuration.
+- The deployment API refuses a non-loopback listener without a bearer
+  credential, bounds JSON bodies, hides artifact paths, revalidates release
+  digests, and applies enabled ScopeBindings before catalog disclosure.
 
 ## Residual risks
 
@@ -53,8 +56,9 @@ expose MCP beyond loopback without authentication and origin/host controls.
 4. Keep API keys in a secret manager or process environment, never arguments or
    source files.
 5. Set minimal `EXPERTCOMPOSE_IMPORT_ROOTS` for MCP.
-6. Keep HTTP on loopback for the MVP; if extending it, configure Contexture
-   authentication, principals, allowed hosts, and allowed origins.
+6. Keep authoring MCP on loopback or behind an authenticated ingress. For the
+   deployment API, use a long bearer secret, TLS termination, and network
+   policy; its current credential identifies a service, not an end user.
 7. Review Tool schemas and least privilege before implementing new bindings.
 8. Require behavioral receipts and domain approval for consequential use.
 9. Preserve build, report, approval, and release manifests for audit.

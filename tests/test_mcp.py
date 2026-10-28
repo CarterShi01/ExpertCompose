@@ -14,6 +14,7 @@ def test_mcp_application_compiles(monkeypatch: pytest.MonkeyPatch, tmp_path: Pat
     refs = {ref for ref, _node in compiled.index.walk()}
     assert "expert-compose" in refs
     assert any(ref.endswith("/publish-expert-net") for ref in refs)
+    assert any(ref.endswith("/create-scope-binding") for ref in refs)
 
 
 def test_mcp_import_allowlist(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:

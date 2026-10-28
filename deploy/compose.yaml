@@ -1,0 +1,39 @@
+services:
+  expertcompose-api:
+    build:
+      context: ..
+      dockerfile: Containerfile
+    image: expertcompose:local
+    restart: unless-stopped
+    environment:
+      EXPERTCOMPOSE_API_TOKEN: ${EXPERTCOMPOSE_API_TOKEN:?set EXPERTCOMPOSE_API_TOKEN}
+    ports:
+      - "127.0.0.1:8090:8090"
+    volumes:
+      - expertcompose-data:/data
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8090/readyz', timeout=2).read()"
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
+  expertcompose-mcp:
+    image: expertcompose:local
+    profiles: ["mcp"]
+    restart: unless-stopped
+    command: ["serve", "--transport", "streamable-http", "--port", "8080"]
+    ports:
+      - "127.0.0.1:8080:8080"
+    volumes:
+      - expertcompose-data:/data
+    depends_on:
+      expertcompose-api:
+        condition: service_healthy
+
+volumes:
+  expertcompose-data:

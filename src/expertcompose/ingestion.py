@@ -63,18 +63,49 @@ class Ingestor:
             )
         raw = source_path.read_bytes()
         detected = kind or detect_kind(source_path)
-        units, media_type = normalize(raw, detected, source_path.name)
+        return self.import_bytes(
+            project_id,
+            raw,
+            kind=detected,
+            origin=str(source_path),
+            authorization=authorization,
+            title=title or source_path.stem,
+            license=license,
+        )
+
+    def import_bytes(
+        self,
+        project_id: str,
+        raw: bytes,
+        *,
+        kind: SourceKind,
+        origin: str,
+        authorization: str,
+        title: str,
+        license: str = "unknown",
+    ) -> tuple[SourceRecord, bool]:
+        """Import bounded bytes supplied by an authenticated host boundary."""
+
+        if len(raw) > MAX_SOURCE_BYTES:
+            raise SourceImportError(
+                f"source is {len(raw)} bytes; MVP limit is {MAX_SOURCE_BYTES} bytes per file"
+            )
+        if not origin.strip():
+            raise SourceImportError("source origin must not be empty")
+        if not title.strip():
+            raise SourceImportError("source title must not be empty")
+        units, media_type = normalize(raw, kind, origin)
         if not units:
-            raise SourceImportError(f"source {source_path} contains no usable text")
+            raise SourceImportError(f"source {origin} contains no usable text")
         digest = hashlib.sha256(raw).hexdigest()
         source_id = stable_id("src", project_id, digest)
         bound_units = tuple(unit.model_copy(update={"source_id": source_id}) for unit in units)
         record = SourceRecord(
             source_id=source_id,
             project_id=project_id,
-            kind=detected,
-            title=(title.strip() or source_path.stem)[:300],
-            origin=str(source_path),
+            kind=kind,
+            title=title.strip()[:300],
+            origin=origin.strip(),
             sha256=digest,
             media_type=media_type,
             byte_count=len(raw),

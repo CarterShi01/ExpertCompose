@@ -1,7 +1,13 @@
 # ExpertCompose architecture and product design
 
-Status: MVP v0.1 authoritative design
+Status: MVP v0.1 authoritative design; production decoupling direction active
 Last updated: 2026-10-28
+
+The authoritative boundary for Contexture, ExpertCompose, and one-creator is
+[three-product-direction.md](three-product-direction.md). Its implementation
+architecture is specified in
+[three-product-decoupling-design.md](three-product-decoupling-design.md). These
+documents preserve the v0.1 evidence/compiler/release contract defined here.
 
 ## 1. Product thesis
 
@@ -224,15 +230,20 @@ B” and prevents model output from self-approving.
 CLI and MCP; neither interface reimplements domain logic.
 
 The CLI exposes initialization, project operations, ingest, compose, build,
-suite export, evaluate, approve, publish, and serve. It emits JSON on stdout
-and concise errors on stderr.
+suite export, evaluate, approve, publish, ScopeBinding, local Runtime, MCP, and
+the deployment API. It emits JSON on stdout and concise errors on stderr.
 
 The MCP application exposes the same lifecycle as a Contexture Role with a
 source-safety Skill and typed Tools. Model-assisted provider credentials are
 intentionally absent from MCP v0.1; a deployment-specific provider policy can
 be added without putting secrets in Tool arguments.
 
-The v0.1 MCP surface is a local **control plane**, not the final consumer
+The authenticated `/v1` HTTP boundary gives deployed consumers verified,
+Scope-selected release catalogs without exposing Workspace paths. It is small
+by design; the full authoring lifecycle stays on CLI/MCP until durable remote
+jobs exist.
+
+The MCP surface is a local **control plane**, not the final consumer
 connector. The product direction separates a read-mostly Runtime endpoint from
 the Studio/control endpoint, adds host adapter Skills, and keeps large expert
 libraries behind Contexture progressive disclosure. The complete scenario
@@ -248,11 +259,12 @@ and review artifacts remain inspectable after a later stage fails. A failed
 compose does not create a Blueprint; a failed generation does not publish; a
 failed evaluation cannot be approved.
 
-The MVP is safe for ordinary single-process local use. SQLite arbitrates basic
-concurrent writes, but multi-worker version allocation and artifact generation
-need an explicit project lock before production service deployment. Remote
-object storage, distributed queues, tenant isolation, encryption-at-rest, and
-retention policies are post-MVP deployment concerns.
+The MVP is safe for ordinary single-process local use and a single-writer
+container deployment. SQLite arbitrates basic concurrent writes, but
+multi-worker version allocation and artifact generation need an explicit lock
+before horizontal scale-out. Remote object storage, distributed queues, tenant
+isolation, encryption-at-rest, and retention policies remain later deployment
+concerns.
 
 ## 11. Privacy and rights
 

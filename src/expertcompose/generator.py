@@ -305,7 +305,8 @@ from __future__ import annotations
 
 import argparse
 
-from contexture.server import ContextureOptions, compile_application, serve
+from contexture.core.model import SurfaceSelection
+from contexture.server import ContextureOptions, HeaderSurfaceSelector, compile_application
 
 from .app import app
 
@@ -315,9 +316,10 @@ def main() -> int:
     parser.add_argument("--check", action="store_true")
     parser.add_argument("--transport", choices=("stdio", "streamable-http"), default="stdio")
     parser.add_argument("--port", type=int, default=8000)
+    parser.add_argument("--select", action="append", default=[])
     args = parser.parse_args()
+    compiled = compile_application(app)
     if args.check:
-        compiled = compile_application(app)
         print(f"valid: {len(tuple(compiled.index.walk()))} Contexture refs")
         return 0
     options = (
@@ -325,7 +327,14 @@ def main() -> int:
         if args.transport == "stdio"
         else ContextureOptions(transport="streamable-http", port=args.port)
     )
-    serve(app, options)
+    ceiling = (
+        SurfaceSelection.only(tuple(args.select)).resolve(compiled.index)
+        if args.select else SurfaceSelection.all()
+    )
+    server = compiled.server(
+        surface_selector=HeaderSurfaceSelector(ceiling=lambda _principal: ceiling)
+    )
+    server.start(options)
     return 0
 
 

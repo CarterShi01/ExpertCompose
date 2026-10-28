@@ -14,7 +14,7 @@ from datetime import UTC, datetime
 from enum import StrEnum
 from typing import Any, Literal, Self
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, JsonValue, field_validator, model_validator
 
 NAME_PATTERN = r"^[a-z][a-z0-9-]{0,63}$"
 _NAME = re.compile(NAME_PATTERN)
@@ -194,6 +194,7 @@ class RoleBlueprint(Record):
     tool_requirements: tuple[str, ...] = ()
     uses: tuple[str, ...] = ()
     evidence_refs: tuple[str, ...] = Field(min_length=1)
+    annotations: dict[str, JsonValue] = Field(default_factory=dict)
 
     @model_validator(mode="after")
     def unique_members(self) -> Self:
@@ -321,6 +322,35 @@ class ReleaseManifest(Record):
     published_by: str | None = Field(default=None, max_length=200)
 
 
+class ScopeBinding(Record):
+    """Bind one exact ExpertNet release surface to an opaque business Scope."""
+
+    schema_version: Literal[1] = 1
+    binding_id: str = Field(pattern=r"^bind_[a-f0-9]{24}$")
+    scope_ref: str = Field(
+        min_length=4,
+        max_length=1000,
+        pattern=r"^[a-z][a-z0-9+.-]*://[^\s]+$",
+    )
+    release_id: str = Field(pattern=r"^rel_[a-f0-9]{24}$")
+    role_selectors: tuple[str, ...] = Field(default=(), max_length=128)
+    enabled: bool = True
+    revision: int = Field(default=1, ge=1)
+    created_at: datetime
+    updated_at: datetime
+    created_by: str = Field(min_length=1, max_length=200)
+
+    @field_validator("role_selectors")
+    @classmethod
+    def selectors_are_bounded_and_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        normalized = tuple(selector.strip() for selector in value)
+        if any(not selector or len(selector) > 1000 for selector in normalized):
+            raise ValueError("Role selectors must contain 1..1000 characters")
+        if len(normalized) != len(set(normalized)):
+            raise ValueError("Role selectors must be unique")
+        return normalized
+
+
 def stable_id(prefix: str, *parts: str, length: int = 24) -> str:
     """Create a deterministic identifier for immutable content."""
 
@@ -355,6 +385,7 @@ __all__ = [
     "ReleaseManifest",
     "ReleaseStatus",
     "RoleBlueprint",
+    "ScopeBinding",
     "SkillBlueprint",
     "SourceKind",
     "SourceLocator",

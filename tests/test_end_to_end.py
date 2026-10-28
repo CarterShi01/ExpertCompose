@@ -48,6 +48,8 @@ async def test_complete_offline_lifecycle(service: ExpertComposeService, source_
     build = service.build("literature-review", blueprint_id)
     assert not build.unbound_required_tools
     assert (build.path / "build-manifest.json").is_file()
+    runner = build.path / "src" / build.package / "__main__.py"
+    assert "HeaderSurfaceSelector" in runner.read_text(encoding="utf-8")
 
     generated = _load_generated(build.path, build.package)
     compiled = compile_application(generated.app)

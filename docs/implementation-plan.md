@@ -3,6 +3,11 @@
 Status: v0.1 implemented; production expansion remains planned
 Last updated: 2026-10-28
 
+The cross-repository extraction and production service work is tracked in the
+executable [three-product decoupling ledger](three-product-decoupling-plan.md).
+That ledger is the acceptance source for the Contexture/ExpertCompose/OC
+decoupling; this document remains the delivery record for the v0.1 compiler.
+
 ## Acceptance definition
 
 The first MVP is complete when a clean machine can import at least a document

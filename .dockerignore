@@ -1,0 +1,8 @@
+.git
+.venv
+.pytest_cache
+.ruff_cache
+.expertcompose
+dist
+__pycache__
+*.pyc

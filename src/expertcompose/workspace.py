@@ -21,6 +21,7 @@ from .models import (
     ExpertBlueprint,
     NormalizedUnit,
     ReleaseManifest,
+    ScopeBinding,
     SourceRecord,
     require_name,
     utc_now,
@@ -40,10 +41,12 @@ class Workspace:
     def __init__(self, root: Path | str) -> None:
         self.root = Path(root).expanduser().resolve()
         self.projects_dir = self.root / "projects"
+        self.bindings_dir = self.root / "bindings"
         self.catalog_path = self.root / "catalog.db"
 
     def initialize(self) -> None:
         self.projects_dir.mkdir(parents=True, exist_ok=True)
+        self.bindings_dir.mkdir(parents=True, exist_ok=True)
         with self._connect() as connection:
             connection.executescript(
                 """
@@ -89,6 +92,16 @@ class Workspace:
                     status TEXT NOT NULL,
                     record_path TEXT NOT NULL,
                     UNIQUE(project_id, version)
+                );
+                CREATE TABLE IF NOT EXISTS scope_bindings (
+                    binding_id TEXT PRIMARY KEY,
+                    scope_ref TEXT NOT NULL,
+                    release_id TEXT NOT NULL REFERENCES releases(release_id),
+                    selectors_key TEXT NOT NULL,
+                    enabled INTEGER NOT NULL,
+                    revision INTEGER NOT NULL,
+                    record_path TEXT NOT NULL,
+                    UNIQUE(scope_ref, release_id, selectors_key)
                 );
                 """
             )
@@ -327,6 +340,126 @@ class Workspace:
                 ),
             )
         return path
+
+    def release(self, release_id: str) -> ReleaseManifest:
+        with self._connect() as connection:
+            row = connection.execute(
+                "SELECT record_path FROM releases WHERE release_id=?", (release_id,)
+            ).fetchone()
+        if row is None:
+            raise FileNotFoundError(f"ExpertNet release {release_id!r} does not exist")
+        return self._load(Path(row[0]), ReleaseManifest)
+
+    def list_releases(self, project_id: str = "") -> list[ReleaseManifest]:
+        query = "SELECT record_path FROM releases"
+        values: tuple[object, ...] = ()
+        if project_id:
+            self.project(project_id)
+            query += " WHERE project_id=?"
+            values = (project_id,)
+        query += " ORDER BY rowid"
+        with self._connect() as connection:
+            rows = connection.execute(query, values).fetchall()
+        return [self._load(Path(row[0]), ReleaseManifest) for row in rows]
+
+    def save_scope_binding(
+        self,
+        binding: ScopeBinding,
+        *,
+        expected_revision: int | None = None,
+    ) -> Path:
+        """Insert or CAS-update one binding while retaining reviewable JSON."""
+
+        self.initialize()
+        path = self.bindings_dir / f"{binding.binding_id}.json"
+        selectors_key = json.dumps(
+            binding.role_selectors, ensure_ascii=False, separators=(",", ":")
+        )
+        with self._connect() as connection:
+            current = connection.execute(
+                "SELECT scope_ref,release_id,selectors_key,revision "
+                "FROM scope_bindings WHERE binding_id=?",
+                (binding.binding_id,),
+            ).fetchone()
+            if current is None:
+                if expected_revision is not None:
+                    raise ValueError("ScopeBinding does not exist at the expected revision")
+                self._write_model(path, binding)
+                try:
+                    connection.execute(
+                        "INSERT INTO scope_bindings("
+                        "binding_id,scope_ref,release_id,selectors_key,enabled,revision,record_path"
+                        ") VALUES(?,?,?,?,?,?,?)",
+                        (
+                            binding.binding_id,
+                            binding.scope_ref,
+                            binding.release_id,
+                            selectors_key,
+                            int(binding.enabled),
+                            binding.revision,
+                            str(path),
+                        ),
+                    )
+                except sqlite3.IntegrityError as error:
+                    raise ValueError(
+                        "an equivalent ScopeBinding already exists or its release is missing"
+                    ) from error
+                return path
+
+            if (
+                str(current["scope_ref"]) != binding.scope_ref
+                or str(current["release_id"]) != binding.release_id
+                or str(current["selectors_key"]) != selectors_key
+            ):
+                raise ValueError("a ScopeBinding identity cannot be changed")
+            if expected_revision is None or int(current["revision"]) != expected_revision:
+                raise ValueError("ScopeBinding revision conflict")
+            self._write_model(path, binding)
+            updated = connection.execute(
+                "UPDATE scope_bindings SET enabled=?,revision=?,record_path=? "
+                "WHERE binding_id=? AND revision=?",
+                (
+                    int(binding.enabled),
+                    binding.revision,
+                    str(path),
+                    binding.binding_id,
+                    expected_revision,
+                ),
+            )
+            if updated.rowcount != 1:
+                raise ValueError("ScopeBinding revision conflict")
+        return path
+
+    def scope_binding(self, binding_id: str) -> ScopeBinding:
+        with self._connect() as connection:
+            row = connection.execute(
+                "SELECT record_path FROM scope_bindings WHERE binding_id=?", (binding_id,)
+            ).fetchone()
+        if row is None:
+            raise FileNotFoundError(f"ScopeBinding {binding_id!r} does not exist")
+        return self._load(Path(row[0]), ScopeBinding)
+
+    def list_scope_bindings(
+        self,
+        *,
+        scope_ref: str = "",
+        enabled: bool | None = True,
+    ) -> list[ScopeBinding]:
+        clauses: list[str] = []
+        values: list[object] = []
+        if scope_ref:
+            clauses.append("scope_ref=?")
+            values.append(scope_ref)
+        if enabled is not None:
+            clauses.append("enabled=?")
+            values.append(int(enabled))
+        query = "SELECT record_path FROM scope_bindings"
+        if clauses:
+            query += " WHERE " + " AND ".join(clauses)
+        query += " ORDER BY rowid"
+        with self._connect() as connection:
+            rows = connection.execute(query, tuple(values)).fetchall()
+        return [self._load(Path(row[0]), ScopeBinding) for row in rows]
 
     @contextmanager
     def _connect(self) -> Generator[sqlite3.Connection]:
