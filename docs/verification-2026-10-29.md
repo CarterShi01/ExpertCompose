@@ -91,6 +91,33 @@ the final commit, Client and Omnigent release freshness, 25 agent-adapter tests,
 13 Omnigent-connect tests, Host lifecycle, source locks, Runtime provider, and
 ExpertCompose Team cutover all passed before publication to `origin/master`.
 
+## Project Type extension acceptance
+
+A later additive acceptance covered mandatory Project Type Roles without
+changing the three-product ownership boundary:
+
+- ExpertCompose commits `4fd2485` and `07a5e0c` added source-pack v2 Skill
+  `uses`, explicit Host composition dependencies, and version-correct import
+  provenance;
+- one-creator commit `b71c5c88` exported 40 Roles and 14 Skills from source-pack
+  digest `082194874aa5125f9e2f2d7f471ecbdf3d646432694187fce16be0759bdcdc03`;
+- Blueprint `bp_c189cf823ac7c143682311ee` passed all deterministic release
+  gates and compiled to 137 canonical Contexture refs; the optional behavioral
+  receipt check was explicitly skipped because no Host observations were
+  supplied;
+- immutable release `rel_4441479dab08e22423d18404` was published in the durable
+  user-level Workspace and enabled for `project://one-creator` through binding
+  `bind_0e81abb3426dcc25e08939fc`; and
+- Scope catalog verification recovered both `team/project/goal` and
+  `team/project/area`, including their Host-owned `project/...` dependencies.
+
+ExpertCompose's 26-test suite, Ruff, Pyright (0 errors), sdist/wheel build and
+CLI smoke gate passed for the bridge. one-creator's Project/Team contract
+checks, generated Role-map and capability-manifest checks, Panel tests, Web
+lint/build, and 16 core browser-contract tests passed for the consuming change.
+As elsewhere in this record, the release is local acceptance evidence and not
+a claim that a production database or public service was changed.
+
 ## Acceptance boundary
 
 This record proves the local/container MVP and the independent product
