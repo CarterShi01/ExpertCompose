@@ -30,6 +30,8 @@ and project generation.
   business Scope, and serve a Contexture-selected Runtime surface.
 - Run a bearer-authenticated deployment API that returns only verified,
   Scope-selected release catalogs to products such as one-creator.
+- Turn reviewed OC Team changes into evidence-backed Blueprint revisions and
+  pass them through the same evaluation, approval, release, and binding gates.
 
 ExpertCompose does not execute instructions found in imported content, silently
 turn model output into code, or claim that structural checks prove domain

@@ -226,17 +226,6 @@ class ExpertComposeService:
         published_by: str,
     ) -> ReleaseManifest:
         blueprint = self.workspace.blueprint(project_id, blueprint_id)
-        existing = next(
-            (
-                release
-                for release in self.workspace.list_releases(project_id)
-                if release.blueprint_id == blueprint.blueprint_id
-                and release.status is ReleaseStatus.PUBLISHED
-            ),
-            None,
-        )
-        if existing is not None:
-            return existing
         # Approval changes workflow state but not the semantic Blueprint digest.
         # Re-render here so the immutable release carries the approved record,
         # rather than the earlier draft bytes used during evaluation.

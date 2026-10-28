@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from expertcompose.errors import PublicationBlockedError
 from expertcompose.models import BlueprintStatus
 from expertcompose.service import ExpertComposeService
 from expertcompose.source_pack import source_pack_digest
@@ -190,9 +191,12 @@ def test_scope_catalog_fails_closed_on_ambiguous_bindings(
         "literature-review", revised.blueprint_id, published_by="pytest"
     )
     second = published.release_id
-    assert service.publish(
-        "literature-review", revised.blueprint_id, published_by="pytest"
-    ) == published
+    try:
+        service.publish("literature-review", revised.blueprint_id, published_by="pytest")
+    except PublicationBlockedError:
+        pass
+    else:
+        raise AssertionError("an immutable release was published twice")
     service.create_scope_binding(
         scope_ref="project://one-creator",
         release_id=second,

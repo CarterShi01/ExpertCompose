@@ -75,22 +75,33 @@ the Role tree to the selected surface.
 
 ## OC configuration
 
-Configure OC with an exact release; never use a mutable "latest" alias:
+For a canary or rollback-sensitive deployment, pin an exact release:
 
 ```bash
 export OC_EXPERTCOMPOSE_URL='http://expertcompose-api:8090'
 export OC_EXPERTCOMPOSE_RELEASE_ID='rel_REPLACE_ME'
+export OC_EXPERTCOMPOSE_PROJECT_ID='one-creator-team'
 export OC_EXPERTCOMPOSE_SCOPE_REF='project://one-creator'
 export OC_EXPERTCOMPOSE_TOKEN="$EXPERTCOMPOSE_API_TOKEN"
 export OC_EXPERTCOMPOSE_TIMEOUT_SECONDS='5'
 export OC_EXPERTCOMPOSE_RETRIES='2'
 ```
 
+An exact pin is immutable. Approving a later Blueprint publishes it but does
+not silently move that process; update the release configuration and
+ScopeBinding explicitly.
+
+For an OC instance that is allowed to activate approved Team changes, omit
+`OC_EXPERTCOMPOSE_RELEASE_ID`. OC then resolves the single enabled
+ScopeBinding for its Scope. Approval still pins a new immutable release: it
+creates the new binding and disables the old one. Resolution refuses zero or
+multiple enabled bindings instead of guessing.
+
 OC keeps Project authorization and Hand placement. ExpertCompose supplies the
 released Profile/Skill catalog through the existing OC Team facade. If the
-remote service denies the Scope or is unavailable before OC has loaded the
-immutable release, Team reads fail explicitly; OC does not silently use a
-different catalog.
+remote service denies the Scope or is unavailable, Team reads fail explicitly;
+OC does not keep an indefinitely cached authorization decision or silently use
+a different catalog.
 
 Run the external functional smoke from the OC repository:
 
@@ -104,7 +115,9 @@ python -m oc_app.tests.check_team_expertcompose_external
 2. Compare the released roster, selectors, and assignments with the legacy
    catalog while OC still uses the legacy source.
 3. Create the exact ScopeBinding and run the external smoke.
-4. Set the OC remote variables and restart one canary instance.
+4. Set the OC remote variables and restart one canary instance. Keep the exact
+   release pin during the canary; remove only that variable when the instance
+   is authorized to activate approved revisions.
 5. Verify Team, Work, Automation, Project, and runtime behavior, then roll the
    remaining instances.
 

@@ -15,3 +15,5 @@
 - Deterministic reviewed-team source-pack import and one-creator compatibility.
 - Authenticated versioned HTTP catalog API, container/Compose deployment, and
   documented OC cutover and rollback.
+- Evidence-backed revisions for reviewed OC Team changes, with evaluation,
+  immutable publication, and fail-closed ScopeBinding activation.

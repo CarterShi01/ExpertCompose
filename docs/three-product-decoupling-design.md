@@ -162,8 +162,11 @@ small versioned HTTP/JSON boundary exists for service consumers:
 /healthz and /readyz
 /v1/projects
 /v1/projects/{id}/source-packs
+/v1/projects/{id}/revisions
+/v1/projects/{id}/supersede
 /v1/projects/{id}/{build,evaluate,approve,publish}
 /v1/releases
+/v1/catalog?scope_ref=...
 /v1/releases/{release_id}/catalog?scope_ref=...
 /v1/scope-bindings
 ```
@@ -173,12 +176,20 @@ removes local paths, applies the enabled ScopeBinding, and returns a digest for
 the selected Blueprint. Upload and durable-job endpoints are added only when
 remote asynchronous authoring is implemented.
 
+OC capability acquisition, learning, and Skill evolution remain OC workflows
+because they use OC Sessions, Hands, Projects, and permissions. Their reviewed
+content converges at the existing Draft decision: a configured service imports
+the exact Draft as evidence and creates the next ordinary Blueprint. Approval
+then runs the existing build, evaluation, approval, publication, and
+ScopeBinding switch. Thus OC still owns who may decide, while ExpertCompose is
+the sole writer of reusable team content.
+
 Agent use goes through a separate Runtime MCP endpoint. It loads a pinned
 ExpertNet release, derives a Contexture ceiling from authorized ScopeBindings,
 and allows the request header to narrow that ceiling further.
 
-Long operations return a durable job ID. Repeating a command with the same
-idempotency key returns the existing job or result.
+The initial service runs these operations synchronously. Durable jobs are a
+scale-out adapter, not a new product concept.
 
 ## 5. Personal and enterprise editions
 
@@ -309,7 +320,11 @@ The first shared deployment is intentionally one API process and an optional
 MCP process over one durable Workspace volume. SQLite remains a single-writer
 deployment constraint. Health/readiness, bearer authentication, bounded JSON
 requests, immutable releases, exact ScopeBindings, an OC fail-closed client,
-and a configuration rollback are implemented and container-tested.
+and a configuration rollback are implemented and container-tested. A consumer
+may stay pinned to an exact release, or resolve the single enabled binding for
+a Scope. Scope resolution fails closed when zero or multiple bindings are
+enabled; an approved OC revision switches the binding only in Scope-resolved
+mode. Exact-release deployments require an explicit configuration update.
 
 Only measured demand for multiple replicas or long background work justifies
 the later repository/object-store/worker adapters. That upgrade changes hosts,

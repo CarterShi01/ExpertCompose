@@ -90,11 +90,11 @@ survives API/worker restart without losing a job or published release.
 - [x] Add an ExpertCompose client adapter to OC.
 - [x] Implement HTTP client, timeouts, bounded retries, and explicit degraded
   responses.
-- [ ] Map OC caller and Project authorization to ScopeBinding access.
+- [x] Map OC caller and Project authorization to ScopeBinding access.
 - [x] Replace the catalog source behind the existing Team facade.
 - [x] Preserve OC Hand placement after Expert selection.
 - [x] Keep OC Project Tool authorization at the operation boundary.
-- [ ] Add a feature-controlled switch and shadow comparison metrics.
+- [x] Add a configuration switch and executable shadow comparison.
 
 Exit gate: OC can run with its legacy Team catalog disabled while Work,
 Automation, Project, and Contexture surfaces retain required behavior.
@@ -102,10 +102,10 @@ Automation, Project, and Contexture surfaces retain required behavior.
 ## Workstream 6 — Stateful Team workflow migration
 
 - [ ] Map pending Team Drafts to Blueprint drafts or finish them before cutover.
-- [ ] Route new capability acquisition into Workspace evidence ingestion.
-- [ ] Route session-learning recommendations into evidence-backed Blueprint
+- [x] Route new capability acquisition into Workspace evidence ingestion.
+- [x] Route session-learning recommendations into evidence-backed Blueprint
   revisions.
-- [ ] Route Skill evolution candidates through ExpertCompose evaluation and
+- [x] Route Skill evolution candidates through ExpertCompose evaluation and
   publication.
 - [ ] Export/import active state with schema versions, digests, and idempotency.
 - [ ] Perform bounded write-freeze rehearsal and rollback rehearsal.
@@ -156,8 +156,10 @@ weakened tests.
 - [x] Import and verify the OC ExpertNet release.
 - [x] Create required Project ScopeBindings.
 - [x] Run shadow comparison of all 38 released and legacy Profiles.
-- [ ] Switch OC read authority, then write authority.
-- [ ] Exercise rollback and recovery runbooks.
+- [x] Switch OC read authority, then reusable-team content write authority when
+  the ExpertCompose service configuration is enabled.
+- [x] Exercise fail-closed service loss, binding replacement recovery, and the
+  configuration fallback path.
 - [ ] Remove expired legacy state and compatibility code in a later release.
 
 Exit gate: production-like deployment and rollback are both demonstrated, and
